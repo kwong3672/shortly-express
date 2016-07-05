@@ -3,6 +3,8 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var crypto = require('crypto');
+var bcrypt = require('bcrypt-nodejs');
 
 
 var db = require('./app/config');
@@ -49,7 +51,7 @@ function(req, res) {
   });
 });
 
-app.post('/links', util.restrict,
+app.post('/links',
 function(req, res) {
   var uri = req.body.url;
   console.log('within shortly.js post link function');
@@ -112,19 +114,27 @@ app.post('/signup', function(req, res) {
   // new User(req.body);
   // res.status(201).send('created fake user');
 
-  new User(req.body).fetch().then(function(found) {
+  new User({username: req.body.username}).fetch().then(function(found) {
     if (found) {
-      res.status(200).send(found.attributes);
-    } else {
 
+      res.status(200).send('user already exists');
+    } else {
+      var salt = bcrypt.genSaltSync(10);
+      var hashPassword = crypto.createHash('sha1');
+      hashPassword.update(salt.concat(req.body.password));
+      var securePassword = hashPassword.digest('hex');
+      console.log(securePassword);
       Users.create({
         username: req.body.username,
-        password: req.body.password
-      })
-      .then(function(newUser) {
-        // console.log('newuser is:', newUser);
-        res.writeHead(302, {'location': '/'});
-        res.end(null, [newUser.attributes]);
+        password: securePassword,
+        salt: salt
+      }).then(function() {
+        req.session.regenerate(function() {
+          req.session.user = req.body.username;
+          res.writeHead(302, {'location': '/'});
+          res.end(null, 'Created your user account');
+        });
+        
       });
     }
   });
@@ -134,6 +144,10 @@ app.get('/logout', function(req, res) {
   req.session.destroy(function() {
     res.redirect('/login');
   });
+});
+
+app.get('/create', util.restrict, function(req, res) {
+
 });
 
 /************************************************************/
