@@ -32,7 +32,7 @@ Shortly.createLinkView = Backbone.View.extend({
   failure: function(model, res) {
     this.stopSpinner();
     this.$el.find('.message')
-      .html('Please enter a valid URL')
+      .html('Please enter a valid URL and/or login')
       .addClass('error');
     return this;
   },

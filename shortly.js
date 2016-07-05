@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 
 
 var db = require('./app/config');
@@ -12,6 +13,8 @@ var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
 var app = express();
+
+app.use(session({secret: 'secret string'}));
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -28,29 +31,29 @@ function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
+app.get('/signup', 
 function(req, res) {
   res.render('signup');
 });
 
 app.get('/login', 
 function(req, res) {
-  console.log(req);
+  console.log(req.session);
   res.render('login');
 });
 
-app.get('/links', 
+app.get('/links', util.restrict, 
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.status(200).send(links.models);
   });
 });
 
-app.post('/links', 
+app.post('/links', util.restrict,
 function(req, res) {
   var uri = req.body.url;
   console.log('within shortly.js post link function');
-  console.log(req.body);
+  console.log(req.session);
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
     return res.sendStatus(404);
@@ -89,8 +92,11 @@ app.post('/login', function(req, res) {
     if (foundName) {
       // console.log('foundName=====================');
       // console.log(foundName);
-      res.writeHead(302, {'location': '/'});
-      res.end(null, 'logged into post ');
+      req.session.regenerate(function() {
+        req.session.user = req.body.username;
+        res.writeHead(302, {'location': '/'});
+        res.end(null, 'logged into post ');
+      });
     } else {
       // console.log('NO foundName=====================');
       // console.log(foundName);
@@ -124,6 +130,11 @@ app.post('/signup', function(req, res) {
   });
 });
 
+app.get('/logout', function(req, res) {
+  req.session.destroy(function() {
+    res.redirect('/login');
+  });
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
