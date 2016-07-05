@@ -30,7 +30,13 @@ function(req, res) {
 
 app.get('/create', 
 function(req, res) {
-  res.render('index');
+  res.render('signup');
+});
+
+app.get('/login', 
+function(req, res) {
+  console.log(req);
+  res.render('login');
 });
 
 app.get('/links', 
