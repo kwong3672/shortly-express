@@ -43,7 +43,8 @@ function(req, res) {
 app.post('/links', 
 function(req, res) {
   var uri = req.body.url;
-
+  console.log('within shortly.js post link function');
+  console.log(req.body);
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
     return res.sendStatus(404);
@@ -75,7 +76,33 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+app.post('/login', function(req, res) {
+  console.log('trying to Login');
+  console.log(req.body);
+  res.status(201).send('logged into post ');
+});
 
+app.post('/signup', function(req, res) {
+
+  // new User(req.body);
+  // res.status(201).send('created fake user');
+
+  new User(req.body).fetch().then(function(found) {
+    if (found) {
+      res.status(200).send(found.attributes);
+    } else {
+
+      Users.create({
+        username: req.body.username,
+        password: req.body.password
+      })
+      .then(function(newUser) {
+        console.log('newuser is:',newUser);
+        res.status(200).send([newUser.attributes]);
+      });
+    }
+  });
+});
 
 
 /************************************************************/
