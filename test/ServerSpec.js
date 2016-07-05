@@ -81,10 +81,8 @@ describe('', function() {
         // login via form and save session info
         requestWithSession(options, function(error, res, body) {
           if (error) {
-            // console.log('error from line 84', res);
             return;
           }
-          console.log(body);
           done();
         });
       });
@@ -218,7 +216,7 @@ describe('', function() {
 
   }); // 'Link creation'
 
-    beforeEach('Privileged Access:', function() {
+  beforeEach('Privileged Access:', function() {
 
     it('Redirects to login page if a user tries to access the main page and is not signed in', function(done) {
       request('http://127.0.0.1:4568/', function(error, res, body) {
@@ -259,7 +257,6 @@ describe('', function() {
         db.knex('users')
           .where('username', '=', 'Svnh')
           .then(function(res) {
-            console.log('within test create Svnh', body);
             if (res[0] && res[0]['username']) {
               var user = res[0]['username'];
             }

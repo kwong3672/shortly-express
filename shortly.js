@@ -78,7 +78,6 @@ function(req, res) {
 /************************************************************/
 app.post('/login', function(req, res) {
   console.log('trying to Login');
-  console.log(req.body);
   res.status(201).send('logged into post ');
 });
 
@@ -97,8 +96,9 @@ app.post('/signup', function(req, res) {
         password: req.body.password
       })
       .then(function(newUser) {
-        console.log('newuser is:',newUser);
-        res.status(200).send([newUser.attributes]);
+        console.log('newuser is:', newUser);
+        res.writeHead(302, {'location': '/'});
+        res.end(null, [newUser.attributes]);
       });
     }
   });
