@@ -77,8 +77,22 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 app.post('/login', function(req, res) {
-  console.log('trying to Login');
-  res.status(201).send('logged into post ');
+  // console.log('trying to Login');
+  // console.log(req.body);
+  util.checkUser(req.body.username, req.body.password, function(err, foundName) {
+    if (foundName) {
+      // console.log('foundName=====================');
+      // console.log(foundName);
+      res.writeHead(302, {'location': '/'});
+      res.end(null, 'logged into post ');
+    } else {
+      // console.log('NO foundName=====================');
+      // console.log(foundName);
+      res.writeHead(302, {'location': '/login'});
+      res.end();
+    }
+    // console.log('check user CB');
+  });
 });
 
 app.post('/signup', function(req, res) {
@@ -96,7 +110,7 @@ app.post('/signup', function(req, res) {
         password: req.body.password
       })
       .then(function(newUser) {
-        console.log('newuser is:', newUser);
+        // console.log('newuser is:', newUser);
         res.writeHead(302, {'location': '/'});
         res.end(null, [newUser.attributes]);
       });
