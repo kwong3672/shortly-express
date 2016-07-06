@@ -5,6 +5,15 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var crypto = require('crypto');
 var bcrypt = require('bcrypt-nodejs');
+var path = require('path');
+var knex = require('knex')({
+  client: 'sqlite3',
+  connection: {
+    filename: path.join(__dirname, './db/shortly.sqlite'),
+    // database: 'main'
+  },
+  useNullAsDefault: true
+});
 
 
 var db = require('./app/config');
@@ -71,14 +80,25 @@ function(req, res) {
           return res.sendStatus(404);
         }
 
-        Links.create({
-          url: uri,
-          title: title,
-          baseUrl: req.headers.origin
-        })
-        .then(function(newLink) {
-          res.status(200).send(newLink);
+        // var rows = knex.select().from('users');
+        // console.log('=============================', Links[0]);
+        var id; 
+
+        knex.select('id').from('users').where('username', req.session.user).then(function(value) {
+          console.log('logged in user: ' + req.session.user + ' : ' + value.length, value[0].id);
+          id = value[0].id;
+          Links.create({
+            url: uri,
+            title: title,
+            baseUrl: req.headers.origin,
+            userId: id
+
+          })
+          .then(function(newLink) {
+            res.status(200).send(newLink);
+          });
         });
+        // console.log('our id is ======================', id);
       });
     }
   });

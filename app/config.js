@@ -8,6 +8,20 @@ var knex = require('knex')({
 });
 var db = require('bookshelf')(knex);
 
+db.knex.schema.hasTable('users').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('users', function (user) {
+      user.increments('id').primary();
+      user.string('username', 255);
+      user.string('password', 255);
+      user.string('salt', 255);
+      console.log('from config.js line 48');
+    }).then(function (table) {
+      console.log('Created Users Table', table);
+    });
+  }
+});
+
 db.knex.schema.hasTable('urls').then(function(exists) {
   if (!exists) {
     db.knex.schema.createTable('urls', function (link) {
@@ -18,6 +32,7 @@ db.knex.schema.hasTable('urls').then(function(exists) {
       link.string('title', 255);
       link.integer('visits');
       link.timestamps();
+      link.integer('userId', 11).unsigned().references('id').inTable('users');
     }).then(function (table) {
       console.log('Created URL Table', table);
     });
@@ -39,18 +54,5 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
 /************************************************************/
 // Add additional schema definitions below
 /************************************************************/
-db.knex.schema.hasTable('users').then(function(exists) {
-  if (!exists) {
-    db.knex.schema.createTable('users', function (user) {
-      user.increments('id').primary();
-      user.string('username', 255);
-      user.string('password', 255);
-      user.string('salt', 255);
-      console.log('from config.js line 48');
-    }).then(function (table) {
-      console.log('Created Users Table', table);
-    });
-  }
-});
 
 module.exports = db;
