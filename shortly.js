@@ -49,22 +49,21 @@ function(req, res) {
 
 app.get('/login', 
 function(req, res) {
-  console.log(req.session);
   res.render('login');
 });
 
 app.get('/links', util.restrict, 
 function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.status(200).send(links.models);
+  knex.select('id').from('users').where('username', req.session.user).then(function(value) {
+    Links.reset().query({where: {userId: value[0].id}}).fetch().then(function(links) {
+      res.status(200).send(links.models);    
+    });
   });
 });
 
 app.post('/links',
 function(req, res) {
   var uri = req.body.url;
-  console.log('within shortly.js post link function');
-  console.log(req.session);
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
     return res.sendStatus(404);
@@ -80,25 +79,18 @@ function(req, res) {
           return res.sendStatus(404);
         }
 
-        // var rows = knex.select().from('users');
-        // console.log('=============================', Links[0]);
-        var id; 
-
         knex.select('id').from('users').where('username', req.session.user).then(function(value) {
-          console.log('logged in user: ' + req.session.user + ' : ' + value.length, value[0].id);
-          id = value[0].id;
           Links.create({
             url: uri,
             title: title,
             baseUrl: req.headers.origin,
-            userId: id
+            userId: value[0].id
 
           })
           .then(function(newLink) {
             res.status(200).send(newLink);
           });
         });
-        // console.log('our id is ======================', id);
       });
     }
   });
@@ -108,31 +100,22 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 app.post('/login', function(req, res) {
-  // console.log('trying to Login');
-  // console.log(req.body);
   util.checkUser(req.body.username, req.body.password, function(err, foundName) {
     if (foundName) {
-      // console.log('foundName=====================');
-      // console.log(foundName);
       req.session.regenerate(function() {
         req.session.user = req.body.username;
         res.writeHead(302, {'location': '/'});
         res.end(null, 'logged into post ');
       });
     } else {
-      // console.log('NO foundName=====================');
-      // console.log(foundName);
       res.writeHead(302, {'location': '/login'});
       res.end();
     }
-    // console.log('check user CB');
   });
 });
 
 app.post('/signup', function(req, res) {
 
-  // new User(req.body);
-  // res.status(201).send('created fake user');
 
   new User({username: req.body.username}).fetch().then(function(found) {
     if (found) {
@@ -143,7 +126,6 @@ app.post('/signup', function(req, res) {
       var hashPassword = crypto.createHash('sha1');
       hashPassword.update(salt.concat(req.body.password));
       var securePassword = hashPassword.digest('hex');
-      console.log(securePassword);
       Users.create({
         username: req.body.username,
         password: securePassword,
